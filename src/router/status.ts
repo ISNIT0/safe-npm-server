@@ -1,10 +1,11 @@
 import { Router } from 'express';
 import Repository = require('github-api/dist/components/Repository');
 import * as asyncHandler from 'express-async-handler';
-import { StatusReport } from 'src/models/statusReport.model';
 import { config } from 'src/config';
 import axios from 'axios';
 import * as path from 'path';
+import { PackageVersion } from 'src/models/packageVersion.model';
+import { Review } from 'src/models/review.model';
 
 const router = Router();
 
@@ -16,38 +17,38 @@ const pendingStates = ['created', 'started'];
 router.get('/:packageName/:version.:format(svg|json)',
     asyncHandler(async (req, res) => {
         const { packageName, version, format } = req.params as any;
-        const packageStatus = await StatusReport.findOne({ packageName, version });
-        if (packageStatus) {
-            if (!!~pendingStates.indexOf(packageStatus.automaticTestStatus)) {
+        const pv = await PackageVersion.findOne({ packageName, version });
+        if (pv) {
+            if (!!~pendingStates.indexOf(pv.automaticTestStatus)) {
                 const build = await getTravisBuild(packageName, version);
                 const buildStatus = build.branch.state;
-                packageStatus.automaticTestStatus = buildStatus;
-                const savedStatus = await packageStatus.save();
+                pv.automaticTestStatus = buildStatus;
+                const savedPv = await pv.save();
                 if (format === 'json') {
-                    res.json(savedStatus);
+                    res.json(savedPv);
                 } else {
-                    const grade = getGrade(savedStatus);
+                    const grade = await getGrade(savedPv);
                     res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
                 }
             } else {
                 if (format === 'json') {
-                    res.json(packageStatus);
+                    res.json(pv);
                 } else {
-                    const grade = getGrade(packageStatus);
+                    const grade = await getGrade(pv);
                     res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
                 }
             }
         } else {
-            const status = new StatusReport();
-            status.packageName = packageName;
-            status.version = version;
-            status.automaticTestStatus = 'created';
+            const pv = new PackageVersion();
+            pv.packageName = packageName;
+            pv.version = version;
+            pv.automaticTestStatus = 'created';
             await startPackageTest(packageName, version);
-            const savedStatus = await status.save();
+            const savedPv = await pv.save();
             if (format === 'json') {
-                res.json(savedStatus);
+                res.json(savedPv);
             } else {
-                const grade = getGrade(savedStatus);
+                const grade = await getGrade(savedPv);
                 res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
             }
         }
@@ -86,11 +87,13 @@ const gradeXState = {
     passed: 'C',
     cancelled: '?'
 };
-function getGrade(status: StatusReport): 'A' | 'B' | 'C' | 'D' | 'F' | '?' {
-    if (status.override) {
-        return status.override;
+async function getGrade(pv: PackageVersion): Promise<'A' | 'B' | 'C' | 'D' | 'F' | '?'> {
+    const reviews = await Review.find({ packageVersion: pv });
+    const latestReview = reviews[0]; //TODO: Sort reviews
+    if (latestReview) {
+        return latestReview.grade;
     } else {
-        return gradeXState[status.automaticTestStatus] as any || '?';
+        return gradeXState[pv.automaticTestStatus] as any || '?';
     }
 }
 
