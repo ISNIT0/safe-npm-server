@@ -31,30 +31,26 @@ router.get('/:packageName.:format(svg|json)',
                         const _pv = new PackageVersion();
                         _pv.packageName = packageName;
                         _pv.version = version;
-                        pv = await _pv.save();
-                    }
 
-                    const report = await Report.findOne({ packageVersion: pv });
-                    let grade = '?';
-                    if (report) {
-                        grade = report.grade;
-                    } else {
                         const report = new Report();
-                        report.packageVersion = pv;
+                        report.packageVersion = _pv;
                         report.grade = '?';
                         report.comments = 'pending';
                         report.updatedAt = new Date();
                         await report.save();
-                        // pv.report = report;
-                        // await pv.save();
+
+                        _pv.report = report;
+                        pv = await _pv.save();
+
+
                         console.info(`Testing [${packageName}@${version}] async`);
                         startPackageTest(packageName, version) // TODO: queue
                             .catch(err => console.error(`Err testing [${packageName}@${version}]`, err));
                     }
-
+                    
                     return {
                         version,
-                        grade
+                        grade: pv.report.grade
                     };
                 })
         );

@@ -7,5 +7,5 @@ export class Report extends BaseEntity {
     @Column() grade: 'A' | 'B' | 'C' | 'D' | 'F' | '?';
     @Column() comments: string;
     @Column() updatedAt: Date;
-    @OneToOne(type => PackageVersion, pv => pv.report) packageVersion: PackageVersion;
+    @OneToOne(type => PackageVersion) packageVersion: PackageVersion;
 }
