@@ -16,5 +16,3 @@ app.use('/', router);
     app.listen(port);
     console.log('Listening on port', port);
 })().catch(e => console.error(e.stack));
-
-import './queue/consumer';

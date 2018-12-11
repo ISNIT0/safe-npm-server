@@ -13,9 +13,6 @@ export interface Config {
         port: number
         logLevel: LogLevel
     }
-    aws: {
-        queueUrl: string
-    }
     github: {
         token: string
     }

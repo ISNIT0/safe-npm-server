@@ -51,14 +51,6 @@ const convictConfig = convict({
             env: 'LOG_LEVEL',
         },
     },
-    aws: {
-        queueUrl: {
-            doc: 'SQS Queue URL',
-            format: String,
-            default: null,
-            env: 'AWS_SQS_QUEUE_URL',
-        }
-    },
     github: {
         token: {
             doc: 'GitHub user token',
