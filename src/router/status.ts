@@ -4,13 +4,14 @@ import * as asyncHandler from 'express-async-handler';
 import { StatusReport } from 'src/models/statusReport.model';
 import { config } from 'src/config';
 import axios from 'axios';
+import * as path from 'path';
 
 const router = Router();
 
 const pendingStates = ['created', 'started'];
 
 // TODO: JSON and PNG api
-router.get('/:packageName/:version.:format(png|json)',
+router.get('/:packageName/:version.:format(svg|json)',
     asyncHandler(async (req, res) => {
         const { packageName, version, format } = req.params as any;
         const packageStatus = await StatusReport.findOne({ packageName, version });
@@ -23,13 +24,15 @@ router.get('/:packageName/:version.:format(png|json)',
                 if (format === 'json') {
                     res.json(savedStatus);
                 } else {
-                    res.send({ comingSoon: true });
+                    const grade = getGrade(savedStatus);
+                    res.sendFile(path.join(__dirname, 'res', `badge${grade}.svg`));
                 }
             } else {
                 if (format === 'json') {
                     res.json(packageStatus);
                 } else {
-                    res.send({ comingSoon: true });
+                    const grade = getGrade(packageStatus);
+                    res.sendFile(path.join(__dirname, '../../', 'res', `badge${grade}.svg`));
                 }
             }
         } else {
@@ -42,7 +45,8 @@ router.get('/:packageName/:version.:format(png|json)',
             if (format === 'json') {
                 res.json(savedStatus);
             } else {
-                res.send({ comingSoon: true });
+                const grade = getGrade(savedStatus);
+                res.sendFile(path.join(__dirname, 'res', `badge${grade}.svg`));
             }
         }
     })
@@ -51,6 +55,7 @@ router.get('/:packageName/:version.:format(png|json)',
 const repo = new Repository('ISNIT0/npm-package-tester', {
     token: config.github.token
 });
+
 async function startPackageTest(packageName: string, version: string) {
     const newBranch = `auto/${packageName}_${version}`;
     const newContent = JSON.stringify({ packageName, version }, null, '\t');
@@ -70,6 +75,21 @@ function getTravisBuild(packageName: string, version: string) {
             Authorization: `token "${config.travis.token}"`
         }
     }).then(a => a.data);
+}
+
+const gradeXState = {
+    created: '?',
+    started: '?',
+    failed: 'F',
+    passed: 'C',
+    cancelled: '?'
+};
+function getGrade(status: StatusReport): 'A' | 'B' | 'C' | 'D' | 'F' | '?' {
+    if (status.override) {
+        return status.override;
+    } else {
+        return gradeXState[status.automaticTestStatus] as any || '?';
+    }
 }
 
 

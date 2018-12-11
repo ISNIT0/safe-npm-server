@@ -7,4 +7,5 @@ export class StatusReport extends BaseEntity {
     @Column() version: string;
     @Column() automaticTestStatus: 'created' | 'started' | 'failed' | 'passed' | 'cancelled';
     @Column({ nullable: true }) automaticTestCompletedAt: Date;
+    @Column({ nullable: true }) override: 'A' | 'B' | 'C' | 'D' | 'F';
 }
