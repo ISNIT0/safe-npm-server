@@ -19,4 +19,7 @@ export interface Config {
     travis: {
         token: string
     }
+    webhook: {
+        token: string
+    }
 }

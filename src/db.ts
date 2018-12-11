@@ -9,7 +9,7 @@ import {
 
 import { postgresDefault, postgresConfig } from 'src/config/db'
 import * as assert from 'assert'
-import { Review } from './models/review.model';
+import { Report } from './models/report.model';
 import { PackageVersion } from './models/packageVersion.model';
 
 const url = process.env.DATABASE_URL || postgresDefault
@@ -20,7 +20,7 @@ const connectOptions = (): ConnectionOptions => ({
   synchronize: false,
   logging: false,
   entities: [
-    Review,
+    Report,
     PackageVersion,
   ],
   cli: {

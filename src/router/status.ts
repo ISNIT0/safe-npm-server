@@ -5,7 +5,7 @@ import { config } from 'src/config';
 import axios from 'axios';
 import * as path from 'path';
 import { PackageVersion } from 'src/models/packageVersion.model';
-import { Review } from 'src/models/review.model';
+import { Report } from 'src/models/report.model';
 
 const router = Router();
 
@@ -34,17 +34,19 @@ router.get('/:packageName.:format(svg|json)',
                         pv = await _pv.save();
                     }
 
-                    const review = await Review.findOne({ packageVersion: pv });
+                    const report = await Report.findOne({ packageVersion: pv });
                     let grade = '?';
-                    if (review) {
-                        grade = review.grade;
+                    if (report) {
+                        grade = report.grade;
                     } else {
-                        const review = new Review();
-                        review.packageVersion = pv;
-                        review.grade = '?';
-                        review.comments = 'pending';
-                        review.updatedAt = new Date();
-                        await review.save();
+                        const report = new Report();
+                        report.packageVersion = pv;
+                        report.grade = '?';
+                        report.comments = 'pending';
+                        report.updatedAt = new Date();
+                        await report.save();
+                        // pv.report = report;
+                        // await pv.save();
                         console.info(`Testing [${packageName}@${version}] async`);
                         startPackageTest(packageName, version) // TODO: queue
                             .catch(err => console.error(`Err testing [${packageName}@${version}]`, err));

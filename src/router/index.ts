@@ -1,10 +1,10 @@
 const { Router } = require('express');
 const { statusRouter } = require('./status');
-const { reviewRouter } = require('./review');
+const { reportRouter } = require('./report');
 
 const router = Router();
 
 router.use('/status', statusRouter);
-router.use('/review', reviewRouter);
+router.use('/report', reportRouter);
 
 export { router }

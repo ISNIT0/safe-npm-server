@@ -1,10 +1,13 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne } from 'typeorm';
-import { Review } from './review.model';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne, JoinColumn } from 'typeorm';
+import { Report } from './report.model';
 
 @Entity()
 export class PackageVersion extends BaseEntity {
     @PrimaryGeneratedColumn('uuid') id: string;
     @Column() packageName: string;
     @Column() version: string;
-    @OneToOne(type => Review, review => review.packageVersion) reviews: Review[];
+    
+    @OneToOne(type => Report, report => report.packageVersion)
+    @JoinColumn()
+    report: Report;
 }

@@ -66,6 +66,14 @@ const convictConfig = convict({
             default: null,
             env: 'TRAVISCI_TOKEN'
         }
+    },
+    webhook: {
+        token: {
+            doc: 'SafeNPM Webhook Token',
+            format: String,
+            default: null,
+            env: 'WEBHOOK_TOKEN'
+        }
     }
 })
 
