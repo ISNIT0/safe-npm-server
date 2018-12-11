@@ -12,7 +12,9 @@
     "postgresql": "npm run postgresql:kill && npm run postgresql:start",
     "build": "rm -rf dist && npx webpack --config webpack.config.js",
     "migrations:run": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:run",
-    "migrations:generate": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -n migration"
+    "migrations:generate": "npx ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js migration:generate -n migration",
+    "build": "rm -rf dist && npx webpack --config webpack.config.js",
+    "postinstall": "npm run build && node scripts/create-orm-config && npm run migrations:run"
   },
   "author": "",
   "license": "ISC",
