@@ -8,6 +8,8 @@ import * as path from 'path';
 
 const router = Router();
 
+const projectRootPath = path.resolve('./');
+
 const pendingStates = ['created', 'started'];
 
 // TODO: JSON and PNG api
@@ -25,14 +27,14 @@ router.get('/:packageName/:version.:format(svg|json)',
                     res.json(savedStatus);
                 } else {
                     const grade = getGrade(savedStatus);
-                    res.sendFile(path.join(__dirname, 'res', `badge${grade}.svg`));
+                    res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
                 }
             } else {
                 if (format === 'json') {
                     res.json(packageStatus);
                 } else {
                     const grade = getGrade(packageStatus);
-                    res.sendFile(path.join(__dirname, '../../', 'res', `badge${grade}.svg`));
+                    res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
                 }
             }
         } else {
@@ -46,7 +48,7 @@ router.get('/:packageName/:version.:format(svg|json)',
                 res.json(savedStatus);
             } else {
                 const grade = getGrade(savedStatus);
-                res.sendFile(path.join(__dirname, 'res', `badge${grade}.svg`));
+                res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
             }
         }
     })

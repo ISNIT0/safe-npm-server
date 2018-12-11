@@ -16,7 +16,7 @@
     "postinstall": "npm run build && node scripts/create-orm-config && npm run migrations:run"
   },
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
     "@types/convict": "^4.2.1",
     "@types/diff": "^3.5.2",
