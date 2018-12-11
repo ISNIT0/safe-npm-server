@@ -22,9 +22,11 @@ router.get('/update/:webhooktoken/:packageName/:version',
         const pv = await PackageVersion.findOne({ packageName, version });
         if (!pv) throw new Error(`Couldn't find package [${packageName}@${version}]`);
 
-        const cont = await repo.getContents('master', `reports/${packageName}/${version}.json`);
+        const { data: cont } = await repo.getContents('master', `reports/${packageName}/${version}.json`);
         if (!cont) throw new Error(`Couldn't find file [reports/${packageName}/${version}.json] in ISNIT0/safe-npm-packages`);
-        const report = JSON.parse(cont);
+
+        const decodedContent = Buffer.from(cont.content, 'base64').toString();
+        const report = JSON.parse(decodedContent);
 
         let pvReport = await Report.findOne({ packageVersion: pv });
         if (!pvReport) {
@@ -35,6 +37,8 @@ router.get('/update/:webhooktoken/:packageName/:version',
         pvReport.comments = report.comments;
         pvReport.updatedAt = new Date();
         await pvReport.save();
+
+        res.json(pvReport);
     })
 );
 
