@@ -5,6 +5,6 @@ export class StatusReport extends BaseEntity {
     @PrimaryGeneratedColumn('uuid') id: string;
     @Column() packageName: string;
     @Column() version: string;
-    @Column() automaticTestStatus: 'queued' | 'testing' | 'failed' | 'completed';
+    @Column() automaticTestStatus: 'created' | 'started' | 'failed' | 'passed' | 'cancelled';
     @Column({ nullable: true }) automaticTestCompletedAt: Date;
 }
