@@ -11,49 +11,64 @@ const router = Router();
 
 const projectRootPath = path.resolve('./');
 
-const pendingStates = ['created', 'started'];
-
 // TODO: JSON and PNG api
-router.get('/:packageName/:version.:format(svg|json)',
+router.get('/:packageName.:format(svg|json)',
     asyncHandler(async (req, res) => {
-        const { packageName, version, format } = req.params as any;
-        const pv = await PackageVersion.findOne({ packageName, version });
-        if (pv) {
-            if (!!~pendingStates.indexOf(pv.automaticTestStatus)) {
-                const build = await getTravisBuild(packageName, version);
-                const buildStatus = build.branch.state;
-                pv.automaticTestStatus = buildStatus;
-                const savedPv = await pv.save();
-                if (format === 'json') {
-                    res.json(savedPv);
-                } else {
-                    const grade = await getGrade(savedPv);
-                    res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
-                }
-            } else {
-                if (format === 'json') {
-                    res.json(pv);
-                } else {
-                    const grade = await getGrade(pv);
-                    res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
-                }
-            }
+        const { packageName, format } = req.params as any;
+
+        const { time: versions } = await getPackageInfo(packageName);
+
+        const latestVersions = Object.keys(versions)
+            .filter(v => !isNaN(Number(v.replace(/\./g, ''))))
+            .sort((a, b) => new Date(versions[a]) < new Date(versions[b]) ? 1 : -1)
+            .slice(0, 5);
+
+        const versionStatuses = await Promise.all(
+            latestVersions
+                .map(async (version) => {
+                    let pv = await PackageVersion.findOne({ packageName, version });
+                    if (!pv) {
+                        const _pv = new PackageVersion();
+                        _pv.packageName = packageName;
+                        _pv.version = version;
+                        pv = await _pv.save();
+                    }
+
+                    const review = await Review.findOne({ packageVersion: pv });
+                    let grade = '?';
+                    if (review) {
+                        grade = review.grade;
+                    } else {
+                        const review = new Review();
+                        review.packageVersion = pv;
+                        review.grade = '?';
+                        review.comments = 'pending';
+                        review.updatedAt = new Date();
+                        await review.save();
+                        console.info(`Testing [${packageName}@${version}] async`);
+                        startPackageTest(packageName, version) // TODO: queue
+                            .catch(err => console.error(`Err testing [${packageName}@${version}]`, err));
+                    }
+
+                    return {
+                        version,
+                        grade
+                    };
+                })
+        );
+
+        if (format === 'json') {
+            res.json(versionStatuses);
         } else {
-            const pv = new PackageVersion();
-            pv.packageName = packageName;
-            pv.version = version;
-            pv.automaticTestStatus = 'created';
-            await startPackageTest(packageName, version);
-            const savedPv = await pv.save();
-            if (format === 'json') {
-                res.json(savedPv);
-            } else {
-                const grade = await getGrade(savedPv);
-                res.sendFile(path.join(projectRootPath, 'res', `badge${grade}.svg`));
-            }
+            // TODO: Implement
+            res.json({ comingSoon: true });
         }
     })
 );
+
+function getPackageInfo(packageName: string) {
+    return axios.get(`http://registry.npmjs.com/${packageName}`).then(a => a.data);
+}
 
 const repo = new Repository('ISNIT0/npm-package-tester', {
     token: config.github.token
@@ -78,23 +93,6 @@ function getTravisBuild(packageName: string, version: string) {
             Authorization: `token "${config.travis.token}"`
         }
     }).then(a => a.data);
-}
-
-const gradeXState = {
-    created: '?',
-    started: '?',
-    failed: 'F',
-    passed: 'C',
-    cancelled: '?'
-};
-async function getGrade(pv: PackageVersion): Promise<'A' | 'B' | 'C' | 'D' | 'F' | '?'> {
-    const reviews = await Review.find({ packageVersion: pv });
-    const latestReview = reviews[0]; //TODO: Sort reviews
-    if (latestReview) {
-        return latestReview.grade;
-    } else {
-        return gradeXState[pv.automaticTestStatus] as any || '?';
-    }
 }
 
 

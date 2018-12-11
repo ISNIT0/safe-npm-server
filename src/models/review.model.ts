@@ -1,12 +1,11 @@
-import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import { BaseEntity, Column, Entity, PrimaryGeneratedColumn, ManyToOne, OneToOne } from 'typeorm';
 import { PackageVersion } from './packageVersion.model';
 
 @Entity()
 export class Review extends BaseEntity {
     @PrimaryGeneratedColumn('uuid') id: string;
-    @Column() grade: 'A' | 'B' | 'C' | 'D' | 'F';
-    @Column() reviewer: string;
+    @Column() grade: 'A' | 'B' | 'C' | 'D' | 'F' | '?';
     @Column() comments: string;
-    @Column() createdAt: Date;
-    @ManyToOne(type => PackageVersion) packageVersion: PackageVersion;
+    @Column() updatedAt: Date;
+    @OneToOne(type => PackageVersion) packageVersion: PackageVersion;
 }
