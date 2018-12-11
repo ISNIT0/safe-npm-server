@@ -1,0 +1,34 @@
+{
+    "packages": [
+        {
+            "packageName": "axios",
+            "versions": [
+                "0.18.0"
+            ]
+        },
+        {
+            "packageName": "uuid",
+            "versions": [
+                "3.3.2"
+            ]
+        },
+        {
+            "packageName": "graceful-fs",
+            "versions": [
+                "4.1.15"
+            ]
+        },
+        {
+            "packageName": "simple-git",
+            "versions": [
+                "1.107.0"
+            ]
+        },
+        {
+            "packageName": "diff",
+            "versions": [
+                "3.5.0"
+            ]
+        }
+    ]
+}
