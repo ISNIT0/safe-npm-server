@@ -17,7 +17,12 @@ import * as Handlebars from 'handlebars';
 const router = Router();
 
 let browser: puppeteer.Browser;
-puppeteer.launch().then(b => browser = b);
+puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
+    .then(b => browser = b)
+    .catch(err => {
+        console.error(`Failed to start Puppeteer:`, err);
+        process.exit(1);
+    });
 
 
 const projectRootPath = path.resolve('./');
