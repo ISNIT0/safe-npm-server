@@ -4,7 +4,7 @@ import { PackageVersion } from './packageVersion.model';
 @Entity()
 export class Report extends BaseEntity {
     @PrimaryGeneratedColumn('uuid') id: string;
-    @Column() grade: 'A' | 'B' | 'C' | 'D' | 'F' | '?';
+    @Column() grade: 'A' | 'B' | 'C' | 'D' | 'F' | 'U';
     @Column() comments: string;
     @Column() updatedAt: Date;
     @OneToOne(type => PackageVersion) packageVersion: PackageVersion;

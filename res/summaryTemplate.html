@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,900" rel="stylesheet">
+</head>
+
+<body>
+    <div class='summary'>
+        <div class="version-pill"><span class="badge-cont">{{packageName}}</span></div>
+        {{#each reports}}
+        <div class="version-pill">
+            <div class="version-cont"><span class="version">{{version}}</span></div>
+            <span class="badge-cont">
+                <img src="{{svg}}" alt="" srcset="" />
+            </span>
+        </div>
+        {{/each}}
+    </div>
+    <style>
+        .summary {
+            display: inline-block;
+            border: 3px solid #9B51E0;
+            color: #fff;
+            font-size: 15px;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .pill {
+            display: inline-block;
+            border-radius: 5px;
+            background: #9B51E0;
+            margin: 3px;
+            height: 20px;
+            padding: 0 5px;
+        }
+
+        .version-pill {
+            border-radius: 5px;
+            background: #333;
+            margin: 3px;
+            height: 20px;
+            display: inline-flex;
+        }
+
+        .version-cont {
+            padding: 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .badge-cont {
+            border-radius: 5px;
+            background: #9B51E0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5px;
+            font-weight: 900;
+        }
+    </style>
+</body>
+
+</html>

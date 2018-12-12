@@ -1,0 +1,25 @@
+{
+    "packageName": "axios",
+    "reports": [
+        {
+            "version": "0.18.0",
+            "grade": "U"
+        },
+        {
+            "version": "0.17.1",
+            "grade": "C"
+        },
+        {
+            "version": "0.17.0",
+            "grade": "D"
+        },
+        {
+            "version": "0.16.2",
+            "grade": "A"
+        },
+        {
+            "version": "0.16.1",
+            "grade": "B"
+        }
+    ]
+}

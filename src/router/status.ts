@@ -6,13 +6,32 @@ import axios from 'axios';
 import * as path from 'path';
 import { PackageVersion } from 'src/models/packageVersion.model';
 import { Report } from 'src/models/report.model';
+import * as puppeteer from 'puppeteer';
+import * as fs from 'fs';
+
+import * as imagemin from 'imagemin';
+import * as imageminPngquant from 'imagemin-pngquant';
+
+import * as Handlebars from 'handlebars';
 
 const router = Router();
 
+let browser: puppeteer.Browser;
+puppeteer.launch().then(b => browser = b);
+
+
 const projectRootPath = path.resolve('./');
+const summaryTemplate = Handlebars.compile(fs.readFileSync(path.join(projectRootPath, 'res/summaryTemplate.html'), 'utf8'));
+const badgeSVGs = fs.readdirSync(path.join(projectRootPath, 'res/'))
+    .filter(fn => fn.includes('badge'))
+    .reduce((acc: any, fn) => {
+        const grade = fn.replace('badge', '').split('.')[0];
+        acc[grade] = 'data:image/svg+xml;base64,' + Buffer.from(fs.readFileSync(path.join(projectRootPath, 'res', fn), 'utf8')).toString('base64');
+        return acc;
+    }, {});
 
 // TODO: JSON and PNG api
-router.get('/:packageName.:format(svg|json)',
+router.get('/:packageName.:format(png|json)',
     asyncHandler(async (req, res) => {
         const { packageName, format } = req.params as any;
 
@@ -34,7 +53,7 @@ router.get('/:packageName.:format(svg|json)',
 
                         const report = new Report();
                         report.packageVersion = _pv;
-                        report.grade = '?';
+                        report.grade = 'U';
                         report.comments = 'pending';
                         report.updatedAt = new Date();
                         await report.save();
@@ -42,12 +61,11 @@ router.get('/:packageName.:format(svg|json)',
                         _pv.report = report;
                         pv = await _pv.save();
 
-
                         console.info(`Testing [${packageName}@${version}] async`);
                         startPackageTest(packageName, version) // TODO: queue
                             .catch(err => console.error(`Err testing [${packageName}@${version}]`, err));
                     }
-                    
+
                     return {
                         version,
                         grade: pv.report.grade
@@ -58,8 +76,7 @@ router.get('/:packageName.:format(svg|json)',
         if (format === 'json') {
             res.json(versionStatuses);
         } else {
-            // TODO: Implement
-            res.json({ comingSoon: true });
+            res.send(await makeSummaryImage(packageName, versionStatuses));
         }
     })
 );
@@ -93,6 +110,30 @@ function getTravisBuild(packageName: string, version: string) {
     }).then(a => a.data);
 }
 
+const imageminOpts = {
+    plugins: [imageminPngquant({ quality: '65-80' })]
+};
+
+async function makeSummaryImage(packageName: string, versionStatuses: { grade: string, version: string }[]) {
+    const summaryHTML = summaryTemplate({
+        packageName,
+        reports: versionStatuses.map(s => ({ ...s, svg: badgeSVGs[s.grade] })),
+    });
+
+    const page = await browser.newPage();
+    let outImg;
+    try {
+        await page.setContent(summaryHTML, {
+            waitUntil: ['domcontentloaded']
+        });
+        const summaryEl = await page.$('.summary');
+        const img = await summaryEl.screenshot({ type: 'png', omitBackground: true });
+        outImg = await imagemin.buffer(img, imageminOpts);
+    } finally {
+        await page.close();
+    }
+    return outImg;
+}
 
 export {
     router as statusRouter
