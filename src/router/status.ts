@@ -81,7 +81,9 @@ router.get('/:packageName.:format(png|json)',
         if (format === 'json') {
             res.json(versionStatuses);
         } else {
-            res.send(await makeSummaryImage(packageName, versionStatuses));
+            const img = await makeSummaryImage(packageName, versionStatuses);
+            res.contentType('png');
+            res.send(img);
         }
     })
 );
