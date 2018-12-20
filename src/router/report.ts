@@ -36,9 +36,9 @@ router.get('/update/:webhooktoken/:packageName/:version',
         pvReport.grade = report.grade;
         pvReport.comments = report.comments;
         pvReport.updatedAt = new Date();
-        await pvReport.save();
+        const savedPvReport = await pvReport.save();
 
-        res.json(pvReport);
+        res.json(savedPvReport);
     })
 );
 
