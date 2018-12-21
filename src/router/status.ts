@@ -35,7 +35,6 @@ const badgeSVGs = fs.readdirSync(path.join(projectRootPath, 'res/'))
         return acc;
     }, {});
 
-// TODO: JSON and PNG api
 router.get('/:packageName.:format(png|json)',
     asyncHandler(async (req, res) => {
         const { packageName, format } = req.params as any;
@@ -56,14 +55,7 @@ router.get('/:packageName.:format(png|json)',
                         _pv.packageName = packageName;
                         _pv.version = version;
 
-                        const report = new Report();
-                        report.packageVersion = _pv;
-                        report.grade = 'U';
-                        report.comments = 'pending';
-                        report.updatedAt = new Date();
-                        await report.save();
-
-                        _pv.report = report;
+                        _pv.reports = [];
                         pv = await _pv.save();
 
                         console.info(`Testing [${packageName}@${version}] async`);
@@ -71,9 +63,10 @@ router.get('/:packageName.:format(png|json)',
                             .catch(err => console.error(`Err testing [${packageName}@${version}]`, err));
                     }
 
+                    const grade = pv.reports.length ? pv.reports[0].grade : 'U'; // TODO: get most recent report
                     return {
                         version,
-                        grade: pv.report.grade
+                        grade,
                     };
                 })
         );
