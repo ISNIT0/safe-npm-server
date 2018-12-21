@@ -27,6 +27,7 @@ puppeteer.launch({ args: ['--no-sandbox', '--disable-setuid-sandbox'] })
 
 const projectRootPath = path.resolve('./');
 const summaryTemplate = Handlebars.compile(fs.readFileSync(path.join(projectRootPath, 'res/summaryTemplate.html'), 'utf8'));
+const badgeTemplate = Handlebars.compile(fs.readFileSync(path.join(projectRootPath, 'res/secureBadgeTemplate.html'), 'utf8'));
 const badgeSVGs = fs.readdirSync(path.join(projectRootPath, 'res/'))
     .filter(fn => fn.includes('badge'))
     .reduce((acc: any, fn) => {
@@ -34,6 +35,22 @@ const badgeSVGs = fs.readdirSync(path.join(projectRootPath, 'res/'))
         acc[grade] = 'data:image/svg+xml;base64,' + Buffer.from(fs.readFileSync(path.join(projectRootPath, 'res', fn), 'utf8')).toString('base64');
         return acc;
     }, {});
+
+router.get('/:packageName/:version.:format(png|json)',
+    asyncHandler(async (req, res) => {
+        const { packageName, version, format } = req.params as any;
+        const pv = await PackageVersion.findOne({ packageName, version });
+        if (!pv) throw new Error(`Package [${packageName}@${version}] not found, if this is not right please make a GitHub issue: https://github.com/ISNIT0/safe-npm-server`);
+        const reports = await Report.find({ packageVersion: pv });
+        if (format === 'json') {
+            res.json(reports);
+        } else {
+            const img = await makeBadgeImage(pv, reports[0]); // TODO: select latest report
+            res.contentType('png');
+            res.send(img);
+        }
+    })
+);
 
 router.get('/:packageName.:format(png|json)',
     asyncHandler(async (req, res) => {
@@ -113,6 +130,28 @@ function getTravisBuild(packageName: string, version: string) {
 const imageminOpts = {
     plugins: [imageminPngquant({ quality: '65-80' })]
 };
+
+async function makeBadgeImage(packageVersion: PackageVersion, report: Report) {
+    const summaryHTML = badgeTemplate({
+        ...report,
+        ...packageVersion,
+        svg: badgeSVGs[report.grade],
+    });
+
+    const page = await browser.newPage();
+    let outImg;
+    try {
+        await page.setContent(summaryHTML, {
+            waitUntil: ['domcontentloaded']
+        });
+        const summaryEl = await page.$('.badge');
+        const img = await summaryEl.screenshot({ type: 'png', omitBackground: true });
+        outImg = await imagemin.buffer(img, imageminOpts);
+    } finally {
+        await page.close();
+    }
+    return outImg;
+}
 
 async function makeSummaryImage(packageName: string, versionStatuses: { grade: string, version: string }[]) {
     const summaryHTML = summaryTemplate({

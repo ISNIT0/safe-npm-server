@@ -9,21 +9,17 @@
 </head>
 
 <body>
-    <div class='summary'>
-        <div class="version-pill"><span class="badge-cont">{{packageName}}</span></div>
-        {{#each reports}}
+    <div class='badge'>
         <div class="version-pill">
-            <div class="version-cont"><span class="version">{{version}}</span></div>
+            <div class="version-cont"><span class="version">{{packageName}} @ {{version}}</span></div>
             <span class="badge-cont">
                 <img src="{{svg}}" alt="" srcset="" />
             </span>
         </div>
-        {{/each}}
     </div>
     <style>
-        .summary {
+        .badge {
             display: inline-block;
-            /* border: 3px solid #9B51E0; */
             color: #fff;
             font-size: 15px;
             font-family: 'Roboto', sans-serif;
